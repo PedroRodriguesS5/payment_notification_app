@@ -1,0 +1,7 @@
+
+#test files
+_test
+_testmain.go
+
+# .env file
+.env
