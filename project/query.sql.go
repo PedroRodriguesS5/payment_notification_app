@@ -3,7 +3,7 @@
 //   sqlc v1.27.0
 // source: query.sql
 
-package db
+package sqlc_db
 
 import (
 	"context"
@@ -85,6 +85,39 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (pgtype.
 	var user_id pgtype.UUID
 	err := row.Scan(&user_id)
 	return user_id, err
+}
+
+const getAllUsers = `-- name: GetAllUsers :many
+SELECT user_id, name, email, password, user_document, phone_number, born_date, created_at FROM users
+`
+
+func (q *Queries) GetAllUsers(ctx context.Context) ([]User, error) {
+	rows, err := q.db.Query(ctx, getAllUsers)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []User
+	for rows.Next() {
+		var i User
+		if err := rows.Scan(
+			&i.UserID,
+			&i.Name,
+			&i.Email,
+			&i.Password,
+			&i.UserDocument,
+			&i.PhoneNumber,
+			&i.BornDate,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getPaymentInfo = `-- name: GetPaymentInfo :one

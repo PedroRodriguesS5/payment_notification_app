@@ -35,8 +35,6 @@ func ConnectPgx(cfg Config) (*pgxpool.Pool, error) {
 		return nil, fmt.Errorf("unable to connect to database: %v", err)
 	}
 
-	defer conn.Close()
-
 	return conn, nil
 }
 

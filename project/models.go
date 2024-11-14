@@ -2,7 +2,7 @@
 // versions:
 //   sqlc v1.27.0
 
-package db
+package sqlc_db
 
 import (
 	"github.com/jackc/pgx/v5/pgtype"
@@ -10,7 +10,7 @@ import (
 
 type Notification struct {
 	NotificationID     int32
-	PaymentID          int32
+	UserID             pgtype.UUID
 	RecurringPaymentID pgtype.Int4
 	Amount             pgtype.Numeric
 	NotificationType   pgtype.Text
