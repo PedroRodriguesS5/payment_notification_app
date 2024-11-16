@@ -16,4 +16,4 @@ RUN go build -v -o /usr/local/bin/app .
 EXPOSE 8080
 
 # Run the built binary
-CMD ["/usr/local/bin/app"]
+CMD ["air","usr", "/usr/local/bin/app", ".air.toml"]
