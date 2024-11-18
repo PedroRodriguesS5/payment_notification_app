@@ -19,11 +19,18 @@ func Handlres(uServcie user.Service) *echo.Echo {
 
 func CreateUser(s user.Service) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		u := new(user.UserRegisterDTO)
-		create, err := s.CreateUser(c.Request().Context(), *u)
+		var req user.UserRegisterDTO
+		if err := c.Bind(&req); err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request"})
+		}
+
+		// if err := c.Validate(&req); err != nil {
+		// 	return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		// }
+		create, err := s.CreateUser(c.Request().Context(), req)
 
 		if err != nil {
-			return err
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
 		return c.JSON(http.StatusCreated, create)
 	}
