@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 
+	"github.com/pedroRodriguesS5/payment_notification/pkg/utils"
 	db "github.com/pedroRodriguesS5/payment_notification/project"
 )
 
@@ -16,12 +17,12 @@ type Service struct {
 }
 
 type UserRegisterDTO struct {
-	Name        string    `json:"name"`
-	Email       string    `json:"email"`
-	Document    string    `json:"document"`
-	Password    string    `json:"password"`
-	PhoneNumber string    `json:"phone_number"`
-	BornDate    time.Time `json:"born_date"`
+	Name         string `json:"name"`
+	Email        string `json:"email"`
+	Password     string `json:"password"`
+	PhoneNumber  string `json:"phone_number"`
+	UserDocument string `json:"user_document"`
+	BornDate     string `json:"born_date"`
 }
 
 func NewService(r *db.Queries) *Service {
@@ -31,28 +32,33 @@ func NewService(r *db.Queries) *Service {
 }
 
 func (s *Service) CreateUser(ctx context.Context, userDTO UserRegisterDTO) (string, error) {
-	var phoneNumber pgtype.Text
-	var BornDate pgtype.Date
+	var bornDate pgtype.Date
+	parseDate, err := time.Parse("2006-01-02", userDTO.BornDate)
 
-	phoneNumber.String = userDTO.PhoneNumber
-	phoneNumber.Valid = true
+	if err != nil {
+		return "", fmt.Errorf("invalid bornd date: %w", err)
+	}
 
-	BornDate.Time = userDTO.BornDate
-	BornDate.Valid = true
+	bornDate.Time = parseDate
+	bornDate.Valid = true
+
+	phoneNumber := pgtype.Text{String: userDTO.PhoneNumber, Valid: true}
+
+	encryptedPass, _ := utils.HashPassword(userDTO.Password)
 
 	params := db.CreateUserParams{
 		Name:         userDTO.Name,
 		Email:        userDTO.Email,
-		UserDocument: userDTO.Document,
-		Password:     userDTO.Password,
+		UserDocument: userDTO.UserDocument,
+		Password:     encryptedPass,
 		PhoneNumber:  phoneNumber,
-		BornDate:     BornDate,
+		BornDate:     bornDate,
 	}
 
 	user, err := s.r.CreateUser(ctx, params)
 
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("error to create user: %w", err)
 	}
 
 	return fmt.Sprintln("Usuário criado com sucesso: ", user), nil
