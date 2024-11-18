@@ -32,6 +32,7 @@ type RecurringPayment struct {
 type User struct {
 	UserID       pgtype.UUID
 	Name         string
+	SecondName   string
 	Email        string
 	Password     string
 	UserDocument string

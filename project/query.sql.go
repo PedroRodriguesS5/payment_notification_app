@@ -59,13 +59,14 @@ func (q *Queries) CreateNotification(ctx context.Context, arg CreateNotification
 }
 
 const createUser = `-- name: CreateUser :one
-INSERT INTO users(name, email,password ,phone_number, user_document, born_date)
-VALUES($1, $2, $3, $4, $5, $6)
+INSERT INTO users(name,second_name, email,password ,phone_number, user_document, born_date)
+VALUES($1, $2, $3, $4, $5, $6, $7)
 RETURNING user_id
 `
 
 type CreateUserParams struct {
 	Name         string
+	SecondName   string
 	Email        string
 	Password     string
 	PhoneNumber  pgtype.Text
@@ -76,6 +77,7 @@ type CreateUserParams struct {
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (pgtype.UUID, error) {
 	row := q.db.QueryRow(ctx, createUser,
 		arg.Name,
+		arg.SecondName,
 		arg.Email,
 		arg.Password,
 		arg.PhoneNumber,
@@ -88,7 +90,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (pgtype.
 }
 
 const getAllUsers = `-- name: GetAllUsers :many
-SELECT user_id, name, email, password, user_document, phone_number, born_date, created_at FROM users
+SELECT user_id, name, second_name, email, password, user_document, phone_number, born_date, created_at FROM users
 `
 
 func (q *Queries) GetAllUsers(ctx context.Context) ([]User, error) {
@@ -103,6 +105,7 @@ func (q *Queries) GetAllUsers(ctx context.Context) ([]User, error) {
 		if err := rows.Scan(
 			&i.UserID,
 			&i.Name,
+			&i.SecondName,
 			&i.Email,
 			&i.Password,
 			&i.UserDocument,
@@ -164,7 +167,7 @@ func (q *Queries) GetPaymentInfo(ctx context.Context) (GetPaymentInfoRow, error)
 }
 
 const getUser = `-- name: GetUser :one
-SELECT user_id, name, email, password, user_document, phone_number, born_date, created_at FROM users WHERE user_id = $1
+SELECT user_id, name, second_name, email, password, user_document, phone_number, born_date, created_at FROM users WHERE user_id = $1
 `
 
 func (q *Queries) GetUser(ctx context.Context, userID pgtype.UUID) (User, error) {
@@ -173,6 +176,7 @@ func (q *Queries) GetUser(ctx context.Context, userID pgtype.UUID) (User, error)
 	err := row.Scan(
 		&i.UserID,
 		&i.Name,
+		&i.SecondName,
 		&i.Email,
 		&i.Password,
 		&i.UserDocument,
@@ -183,30 +187,41 @@ func (q *Queries) GetUser(ctx context.Context, userID pgtype.UUID) (User, error)
 	return i, err
 }
 
-const getUserIDByEmail = `-- name: GetUserIDByEmail :one
-SELECT user_id
+const getUserByEmail = `-- name: GetUserByEmail :one
+SELECT user_id, name, second_name, email, password, user_document, phone_number, born_date, created_at
 FROM users
 WHERE email = $1
 `
 
-func (q *Queries) GetUserIDByEmail(ctx context.Context, email string) (pgtype.UUID, error) {
-	row := q.db.QueryRow(ctx, getUserIDByEmail, email)
-	var user_id pgtype.UUID
-	err := row.Scan(&user_id)
-	return user_id, err
+func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
+	row := q.db.QueryRow(ctx, getUserByEmail, email)
+	var i User
+	err := row.Scan(
+		&i.UserID,
+		&i.Name,
+		&i.SecondName,
+		&i.Email,
+		&i.Password,
+		&i.UserDocument,
+		&i.PhoneNumber,
+		&i.BornDate,
+		&i.CreatedAt,
+	)
+	return i, err
 }
 
 const listPayers = `-- name: ListPayers :many
-SELECT DISTINCT u.user_id, u.email, u.name
+SELECT DISTINCT u.user_id, u.email, u.name, u.second_name
 FROM users u
 JOIN recurring_payment rp ON u.user_id = rp.payer_id
 WHERE rp.receiver_id = $1
 `
 
 type ListPayersRow struct {
-	UserID pgtype.UUID
-	Email  string
-	Name   string
+	UserID     pgtype.UUID
+	Email      string
+	Name       string
+	SecondName string
 }
 
 func (q *Queries) ListPayers(ctx context.Context, receiverID pgtype.UUID) ([]ListPayersRow, error) {
@@ -218,7 +233,12 @@ func (q *Queries) ListPayers(ctx context.Context, receiverID pgtype.UUID) ([]Lis
 	var items []ListPayersRow
 	for rows.Next() {
 		var i ListPayersRow
-		if err := rows.Scan(&i.UserID, &i.Email, &i.Name); err != nil {
+		if err := rows.Scan(
+			&i.UserID,
+			&i.Email,
+			&i.Name,
+			&i.SecondName,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -230,16 +250,17 @@ func (q *Queries) ListPayers(ctx context.Context, receiverID pgtype.UUID) ([]Lis
 }
 
 const listReceivers = `-- name: ListReceivers :many
-SELECT DISTINCT u.user_id, u.email, u.name
+SELECT DISTINCT u.user_id, u.email, u.name, u.second_name
 FROM users u
 JOIN recurring_payment rp ON u.user_id = rp.receiver_id
 WHERE rp.payer_id = $1
 `
 
 type ListReceiversRow struct {
-	UserID pgtype.UUID
-	Email  string
-	Name   string
+	UserID     pgtype.UUID
+	Email      string
+	Name       string
+	SecondName string
 }
 
 func (q *Queries) ListReceivers(ctx context.Context, payerID pgtype.UUID) ([]ListReceiversRow, error) {
@@ -251,7 +272,12 @@ func (q *Queries) ListReceivers(ctx context.Context, payerID pgtype.UUID) ([]Lis
 	var items []ListReceiversRow
 	for rows.Next() {
 		var i ListReceiversRow
-		if err := rows.Scan(&i.UserID, &i.Email, &i.Name); err != nil {
+		if err := rows.Scan(
+			&i.UserID,
+			&i.Email,
+			&i.Name,
+			&i.SecondName,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -290,22 +316,25 @@ func (q *Queries) UpdateCharge(ctx context.Context, arg UpdateChargeParams) erro
 const updateUser = `-- name: UpdateUser :exec
 UPDATE users
 SET name = $2,
-    email = $3,
-    born_date = $4
+    second_name =$3,
+    email = $4,
+    born_date = $5
 WHERE user_id = $1
 `
 
 type UpdateUserParams struct {
-	UserID   pgtype.UUID
-	Name     string
-	Email    string
-	BornDate pgtype.Date
+	UserID     pgtype.UUID
+	Name       string
+	SecondName string
+	Email      string
+	BornDate   pgtype.Date
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) error {
 	_, err := q.db.Exec(ctx, updateUser,
 		arg.UserID,
 		arg.Name,
+		arg.SecondName,
 		arg.Email,
 		arg.BornDate,
 	)
