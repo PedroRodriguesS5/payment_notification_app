@@ -25,6 +25,11 @@ type UserRegisterDTO struct {
 	BornDate     string `json:"born_date"`
 }
 
+type LoginUserDTO struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
 func NewService(r *db.Queries) *Service {
 	return &Service{
 		r: r,
@@ -45,7 +50,6 @@ func (s *Service) CreateUser(ctx context.Context, userDTO UserRegisterDTO) (stri
 	phoneNumber := pgtype.Text{String: userDTO.PhoneNumber, Valid: true}
 
 	encryptedPass, _ := utils.HashPassword(userDTO.Password)
-
 	params := db.CreateUserParams{
 		Name:         userDTO.Name,
 		Email:        userDTO.Email,
@@ -108,4 +112,18 @@ func (s *Service) GetAllUsers(ctx context.Context) ([]*db.User, error) {
 		})
 	}
 	return users, nil
+}
+
+func (s *Service) GetUserByEmail(ctx context.Context, userEmail string) (*db.User, error) {
+	user, err := s.r.GetUserByEmail(ctx, userEmail)
+
+	if err != nil {
+		return nil, fmt.Errorf("user not found: %v", err.Error())
+	}
+
+	return &db.User{
+		UserID:   user.UserID,
+		Email:    user.Email,
+		Password: user.Password,
+	}, nil
 }
