@@ -1,7 +1,8 @@
 -- Tabela Users
 CREATE TABLE users (
     user_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),  -- UUID usado como tipo de chave primária
-    name VARCHAR(60) NOT NULL,
+    name VARCHAR(20) NOT NULL,
+    second_name VARCHAR(40) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(100) NOT NULL,
     user_document VARCHAR(15) NOT NULL UNIQUE,

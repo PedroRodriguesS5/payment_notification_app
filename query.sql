@@ -5,27 +5,28 @@ SELECT * FROM users WHERE user_id = $1;
 SELECT * FROM users;
 
 -- name: ListPayers :many
-SELECT DISTINCT u.user_id, u.email, u.name
+SELECT DISTINCT u.user_id, u.email, u.name, u.second_name
 FROM users u
 JOIN recurring_payment rp ON u.user_id = rp.payer_id
 WHERE rp.receiver_id = $1;
 
 -- name: ListReceivers :many
-SELECT DISTINCT u.user_id, u.email, u.name
+SELECT DISTINCT u.user_id, u.email, u.name, u.second_name
 FROM users u
 JOIN recurring_payment rp ON u.user_id = rp.receiver_id
 WHERE rp.payer_id = $1;
 
 -- name: CreateUser :one
-INSERT INTO users(name, email,password ,phone_number, user_document, born_date)
-VALUES($1, $2, $3, $4, $5, $6)
+INSERT INTO users(name,second_name, email,password ,phone_number, user_document, born_date)
+VALUES($1, $2, $3, $4, $5, $6, $7)
 RETURNING user_id;
 
 -- name: UpdateUser :exec
 UPDATE users
 SET name = $2,
-    email = $3,
-    born_date = $4
+    second_name =$3,
+    email = $4,
+    born_date = $5
 WHERE user_id = $1;
 
 -- name: CreateCharge :one
@@ -33,8 +34,8 @@ INSERT INTO recurring_payment(payer_id, receiver_id, amount, start_date, end_dat
 VALUES($1, $2, $3, $4, $5, $6)
 RETURNING recurring_payment_id;
 
--- name: GetUserIDByEmail :one
-SELECT user_id
+-- name: GetUserByEmail :one
+SELECT user_id, email, password
 FROM users
 WHERE email = $1;
 
