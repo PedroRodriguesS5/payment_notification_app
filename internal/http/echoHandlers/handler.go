@@ -1,4 +1,4 @@
-package echo
+package echoHandlers
 
 import (
 	"fmt"
@@ -10,16 +10,16 @@ import (
 	"github.com/pedroRodriguesS5/payment_notification/pkg/utils/tools"
 )
 
-func Handlres(uServcie user.Service) *echo.Echo {
-	e := echo.New()
+// Handler who the echo will create the routes
+func RegisterPublicRoutes(e *echo.Echo, uService user.Service) {
+	publicGroup := e.Group("/public")
 	// usersHandlers
-	e.GET("/user/:id", GetUser(uServcie))
-	e.GET("/user/all", GetAllUsers(uServcie))
-	e.POST("/user/create", CreateUser(uServcie))
-	e.POST("/user/login", LoginHandler(uServcie))
-	return e
+	publicGroup.GET("/user/all", GetAllUsers(uService))
+	publicGroup.POST("/user/create", CreateUser(uService))
+	publicGroup.POST("/user/login", LoginHandler(uService))
 }
 
+// Handler to create user
 func CreateUser(s user.Service) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var req user.UserRegisterDTO
@@ -39,21 +39,7 @@ func CreateUser(s user.Service) echo.HandlerFunc {
 	}
 }
 
-func GetUser(s user.Service) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		userId := c.Param("id")
-		fmt.Println(userId)
-		findedUser, err := s.GetUser(c.Request().Context(), userId)
-		if err != nil {
-			return c.String(http.StatusInternalServerError, err.Error())
-		}
-		if findedUser == nil {
-			return c.JSON(http.StatusNotFound, err)
-		}
-		return c.JSON(http.StatusOK, findedUser)
-	}
-}
-
+// Handler to get all the user from the dataBase
 func GetAllUsers(s user.Service) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		allUsers, err := s.GetAllUsers(c.Request().Context())
@@ -66,6 +52,7 @@ func GetAllUsers(s user.Service) echo.HandlerFunc {
 	}
 }
 
+// Handler to login and generate token
 func LoginHandler(s user.Service) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var req user.LoginUserDTO

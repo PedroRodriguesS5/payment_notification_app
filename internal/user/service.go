@@ -9,6 +9,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 
 	"github.com/pedroRodriguesS5/payment_notification/pkg/utils"
+	"github.com/pedroRodriguesS5/payment_notification/pkg/utils/tools"
 	db "github.com/pedroRodriguesS5/payment_notification/project"
 )
 
@@ -18,6 +19,7 @@ type Service struct {
 
 type UserRegisterDTO struct {
 	Name         string `json:"name"`
+	SecondName   string `json:"second_name"`
 	Email        string `json:"email"`
 	Password     string `json:"password"`
 	PhoneNumber  string `json:"phone_number"`
@@ -28,6 +30,18 @@ type UserRegisterDTO struct {
 type LoginUserDTO struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
+}
+
+type UserResponseDTO struct {
+	UserID       string     `json:"user_id"`
+	Name         string     `json:"name"`
+	SecondName   string     `json:"second_name,omitempty"`
+	Email        string     `json:"email"`
+	Password     string     `json:"-"` // Hides the password field entirely
+	UserDocument string     `json:"user_document,omitempty"`
+	PhoneNumber  *string    `json:"phone_number,omitempty"`
+	BornDate     *time.Time `json:"born_date,omitempty"`
+	CreatedAt    *time.Time `json:"created_at,omitempty"`
 }
 
 func NewService(r *db.Queries) *Service {
@@ -52,6 +66,7 @@ func (s *Service) CreateUser(ctx context.Context, userDTO UserRegisterDTO) (stri
 	encryptedPass, _ := utils.HashPassword(userDTO.Password)
 	params := db.CreateUserParams{
 		Name:         userDTO.Name,
+		SecondName:   userDTO.SecondName,
 		Email:        userDTO.Email,
 		UserDocument: userDTO.UserDocument,
 		Password:     encryptedPass,
@@ -88,6 +103,8 @@ func (s *Service) GetUser(ctx context.Context, userID string) (*db.User, error) 
 	return &db.User{
 		UserID:       user.UserID,
 		Name:         user.Name,
+		SecondName:   user.SecondName,
+		Password:     user.Password,
 		Email:        user.Email,
 		UserDocument: user.UserDocument,
 		BornDate:     user.BornDate,
@@ -96,17 +113,18 @@ func (s *Service) GetUser(ctx context.Context, userID string) (*db.User, error) 
 	}, nil
 }
 
-func (s *Service) GetAllUsers(ctx context.Context) ([]*db.User, error) {
+func (s *Service) GetAllUsers(ctx context.Context) ([]UserResponseDTO, error) {
 
 	u, err := s.r.GetAllUsers(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error to get data from data base: %v", err)
 	}
-	var users []*db.User
+	var users []UserResponseDTO
 
 	for _, j := range u {
-		users = append(users, &db.User{
-			UserID: j.UserID,
+		convertID, _ := tools.ConvertUUIDToString(j.UserID)
+		users = append(users, UserResponseDTO{
+			UserID: convertID,
 			Name:   j.Name,
 			Email:  j.Email,
 		})
