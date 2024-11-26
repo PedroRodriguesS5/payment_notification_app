@@ -7,9 +7,10 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
+	"github.com/labstack/echo/v4"
 	db "github.com/pedroRodriguesS5/payment_notification/database/db_config"
 	"github.com/pedroRodriguesS5/payment_notification/internal/handler/api"
-	"github.com/pedroRodriguesS5/payment_notification/internal/http/echo"
+	"github.com/pedroRodriguesS5/payment_notification/internal/http/echoHandlers"
 	"github.com/pedroRodriguesS5/payment_notification/internal/user"
 	sqlc_db "github.com/pedroRodriguesS5/payment_notification/project"
 )
@@ -47,11 +48,19 @@ func main() {
 
 	fmt.Println("Conection successful", pool.Stat())
 
+	// Services
 	queries := sqlc_db.New(pool)
 	uService := user.NewService(queries)
-	h := echo.Handlres(*uService)
 
-	err = api.Start("8000", h)
+	// Echo instance
+	e := echo.New()
+
+	// h = echo.Handlres(*uService)
+
+	echoHandlers.RegisterAuthRoutes(e, *uService)
+	echoHandlers.RegisterPublicRoutes(e, *uService)
+
+	err = api.Start("8000", e)
 
 	if err != nil {
 		log.Fatal("Error to runing api", err)
