@@ -1,4 +1,4 @@
-package echoHandlers
+package userHandlers
 
 import (
 	"fmt"
@@ -6,14 +6,15 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/pedroRodriguesS5/payment_notification/internal/user"
-	"github.com/pedroRodriguesS5/payment_notification/pkg/utils"
-	"github.com/pedroRodriguesS5/payment_notification/pkg/utils/tools"
+	"github.com/pedroRodriguesS5/payment_notification/pkg/infra"
+	tools "github.com/pedroRodriguesS5/payment_notification/pkg/utils"
 )
 
 // Handler who the echo will create the routes
-func RegisterPublicRoutes(e *echo.Echo, uService user.Service) {
+func RegisterUserPublicRoutes(e *echo.Echo, uService user.Service) {
 	publicGroup := e.Group("/public")
 	// usersHandlers
+
 	publicGroup.GET("/user/all", GetAllUsers(uService))
 	publicGroup.POST("/user/create", CreateUser(uService))
 	publicGroup.POST("/user/login", LoginHandler(uService))
@@ -69,7 +70,7 @@ func LoginHandler(s user.Service) echo.HandlerFunc {
 		}
 
 		// compare password hash
-		if err := utils.VerifyHashPassword(req.Password, userPayload.Password); !err {
+		if err := infra.VerifyHashPassword(req.Password, userPayload.Password); !err {
 			return c.JSON(http.StatusBadRequest, map[string]string{"Error": "Invalid Credentials"})
 		}
 
@@ -78,7 +79,7 @@ func LoginHandler(s user.Service) echo.HandlerFunc {
 		if err != nil {
 			return fmt.Errorf("erro to conevrt uuid to string: %v", err)
 		}
-		tokenString, err := utils.GenerateToken(convertUUID)
+		tokenString, err := infra.GenerateToken(convertUUID)
 
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Could not create token"})

@@ -3,13 +3,12 @@ package user
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 
-	"github.com/pedroRodriguesS5/payment_notification/pkg/utils"
-	"github.com/pedroRodriguesS5/payment_notification/pkg/utils/tools"
+	"github.com/pedroRodriguesS5/payment_notification/pkg/infra"
+	tools "github.com/pedroRodriguesS5/payment_notification/pkg/utils"
 	db "github.com/pedroRodriguesS5/payment_notification/project"
 )
 
@@ -24,19 +23,14 @@ func NewService(r *db.Queries) *Service {
 }
 
 func (s *Service) CreateUser(ctx context.Context, userDTO UserRegisterDTO) (string, error) {
-	var bornDate pgtype.Date
-	parseDate, err := time.Parse("2006-01-02", userDTO.BornDate)
-
+	parseDate, err := tools.ConvertStringToDate(userDTO.BornDate)
 	if err != nil {
 		return "", fmt.Errorf("invalid bornd date: %w", err)
 	}
 
-	bornDate.Time = parseDate
-	bornDate.Valid = true
-
 	phoneNumber := pgtype.Text{String: userDTO.PhoneNumber, Valid: true}
 
-	encryptedPass, _ := utils.HashPassword(userDTO.Password)
+	encryptedPass, _ := infra.HashPassword(userDTO.Password)
 	params := db.CreateUserParams{
 		Name:         userDTO.Name,
 		SecondName:   userDTO.SecondName,
@@ -44,7 +38,7 @@ func (s *Service) CreateUser(ctx context.Context, userDTO UserRegisterDTO) (stri
 		UserDocument: userDTO.UserDocument,
 		Password:     encryptedPass,
 		PhoneNumber:  phoneNumber,
-		BornDate:     bornDate,
+		BornDate:     parseDate,
 	}
 
 	user, err := s.r.CreateUser(ctx, params)

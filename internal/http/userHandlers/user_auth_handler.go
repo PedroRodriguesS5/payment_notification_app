@@ -1,14 +1,17 @@
-package echoHandlers
+package userHandlers
 
 import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"github.com/pedroRodriguesS5/payment_notification/internal/middleware"
 	"github.com/pedroRodriguesS5/payment_notification/internal/user"
 )
 
-func RegisterAuthRoutes(e *echo.Echo, uService user.Service) {
+func RegisterUserAuthRoutes(e *echo.Echo, uService user.Service) {
 	authGroup := e.Group("/auth")
+
+	authGroup.Use(middleware.AuthToken)
 	authGroup.GET("/user/:id", GetUser(uService))
 }
 
