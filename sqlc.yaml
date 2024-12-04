@@ -4,12 +4,11 @@ sql:
     queries: "query.sql"
     schema: "schema.sql"
     database:
-      uri: "postgres://postgres:${DB_PASSWORD}@localhost:5432/payment_notification_test"
+      uri: "postgres://postgres:Macaco584@@@localhost:5432/payment_notification_test"
     gen:
       go:
         package: "sqlc_db"
         out: "project"
         sql_package: "pgx/v5"
-
-
+  
 

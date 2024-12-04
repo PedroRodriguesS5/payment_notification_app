@@ -10,7 +10,9 @@ import (
 	"github.com/labstack/echo/v4"
 	db "github.com/pedroRodriguesS5/payment_notification/database/db_config"
 	"github.com/pedroRodriguesS5/payment_notification/internal/handler/api"
-	"github.com/pedroRodriguesS5/payment_notification/internal/http/echoHandlers"
+	paymenthandlers "github.com/pedroRodriguesS5/payment_notification/internal/http/paymentHandlers"
+	"github.com/pedroRodriguesS5/payment_notification/internal/http/userHandlers"
+	"github.com/pedroRodriguesS5/payment_notification/internal/payment"
 	"github.com/pedroRodriguesS5/payment_notification/internal/user"
 	sqlc_db "github.com/pedroRodriguesS5/payment_notification/project"
 )
@@ -50,15 +52,16 @@ func main() {
 
 	// Services
 	queries := sqlc_db.New(pool)
+	pService := payment.NewServvice(queries)
 	uService := user.NewService(queries)
-
 	// Echo instance
 	e := echo.New()
 
 	// h = echo.Handlres(*uService)
 
-	echoHandlers.RegisterAuthRoutes(e, *uService)
-	echoHandlers.RegisterPublicRoutes(e, *uService)
+	paymenthandlers.RegisterPaymentAuthRoutes(e, *pService)
+	userHandlers.RegisterUserPublicRoutes(e, *uService)
+	userHandlers.RegisterUserAuthRoutes(e, *uService)
 
 	err = api.Start("8000", e)
 

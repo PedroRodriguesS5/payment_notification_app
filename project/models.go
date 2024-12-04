@@ -10,22 +10,22 @@ import (
 
 type Notification struct {
 	NotificationID     int32
-	UserID             pgtype.UUID
 	RecurringPaymentID pgtype.Int4
-	Amount             pgtype.Numeric
-	NotificationType   pgtype.Text
 	NotificationDate   pgtype.Timestamp
-	Status             pgtype.Text
+	NotificationStatus pgtype.Text
 }
 
 type RecurringPayment struct {
 	RecurringPaymentID int32
 	PayerID            pgtype.UUID
 	ReceiverID         pgtype.UUID
+	PayerName          string
+	ReceiverName       string
 	Amount             pgtype.Numeric
+	NotificationType   pgtype.Text
 	StartDate          pgtype.Date
 	EndDate            pgtype.Date
-	DayOfMonth         pgtype.Int2
+	DayOfMonth         int32
 	PaymentStatus      pgtype.Text
 }
 

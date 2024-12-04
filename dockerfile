@@ -1,19 +1,21 @@
-FROM golang:1.23.2
+FROM golang:1.23-alpine as builer
 
+# Set destination for COPY
 WORKDIR /app
 
 # Download Go modules
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy the entire source code (including subdirectories)
+# Copy the source code. Note the slash at the end, as explained in
+# https://docs.docker.com/reference/dockerfile/#copy
 COPY . .
 
-# Build the Go application
-RUN go build -v -o /usr/local/bin/app .
+# Build
+RUN CGO_ENABLED=0 GOOS=linux go build -o /docker-gs-ping ./cmd/api
 
-# Expose port 8080
+# Port to be expose
 EXPOSE 8080
 
-# Run the built binary
-CMD ["air","usr", "/usr/local/bin/app", ".air.toml"]
+# Run
+CMD ["/docker-gs-ping"]
