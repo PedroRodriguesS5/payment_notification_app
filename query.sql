@@ -34,7 +34,7 @@ INSERT INTO recurring_payment (payer_id, receiver_id, payer_name, receiver_name,
 SELECT 
     $1, 
     $2, 
-    u1.name || ' ' || u1.second_name AS payer_name,   -- Correção da concatenação
+    u1.name || ' ' || u1.second_name AS payer_name,   
     u2.name || ' ' || u2.second_name AS receiver_name, 
     $3, 
     $4, 
@@ -46,8 +46,17 @@ WHERE u1.user_id = $1 AND u2.user_id = $2
 RETURNING recurring_payment_id;
 
 -- name: CreateSelfRecurringPayment :one
-INSERT INTO recurring_payment(payer_id,receiver_name, amount, start_date, end_date, day_of_month)
-VALUES($1,$2, $3, $4, $5, $6)
+INSERT INTO recurring_payment(payer_id,receiver_name,payer_name, amount, notification_type,  start_date, end_date, day_of_month)
+SELECT
+    $1,
+    $2,
+    u.name || ' ' || u.second_name AS payer_name, 
+    $3, 
+    $4, 
+    $5, 
+    $6,
+    $7
+FROM users u WHERE u.user_id = $1
 RETURNING recurring_payment_id;
 
 -- name: GetUserByEmail :one
@@ -76,31 +85,29 @@ SELECT
     u.email AS receiver_email
 FROM recurring_payment rp
 JOIN users u ON u.user_id = rp.receiver_id
-WHERE rp.payment_status = 'active' 
-AND CURRENT_DATE BETWEEN rp.start_date AND rp.end_date
-AND EXTRACT(DAY FROM CURRENT_DATE) = rp.day_of_month;
+WHERE u.user_id = $1;
 
--- name: GetNotificationInfo :one
-SELECT
-    n.notification_id,
-    n.recurring_payment_id,
-    rp.payer_name,
-    rp.receiver_name,
-    rp.amount,
-    rp.notification_type,
-    n.notification_date,
-    n.status
-FROM notification n
-JOIN recurring_payment rp ON n.recurring_payment_id = rp.recurring_payment_id
-JOIN users u ON u.user_id = n.user_id;
+
+-- -- name: GetNotificationInfo :one
+-- SELECT
+--     n.notification_id,
+--     n.recurring_payment_id,
+--     rp.payer_name,
+--     rp.receiver_name,
+--     rp.amount,
+--     rp.notification_type,
+--     n.notification_date,
+--     n.notification_status
+-- FROM notification n
+-- JOIN recurring_payment rp ON n.recurring_payment_id = rp.recurring_payment_id;
         
--- name: GetNotificationsByStatus :many
-SELECT 
-    notification_id, 
-    rp.amount, 
-    rp.notification_type, 
-    notification_date 
-FROM notification
-JOIN recurring_payment rp ON notification.recurring_payment_id = rp.recurring_payment_id
-WHERE status = $1;
+-- -- name: GetNotificationsByStatus :many
+-- SELECT 
+--     notification_id, 
+--     rp.amount, 
+--     rp.notification_type, 
+--     notification_date 
+-- FROM notification
+-- JOIN recurring_payment rp ON notification.recurring_payment_id = rp.recurring_payment_id
+-- WHERE notification_status = $1;
 

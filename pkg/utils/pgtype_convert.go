@@ -2,7 +2,10 @@ package tools
 
 import (
 	"encoding/hex"
+	"errors"
 	"fmt"
+	"math/big"
+	"reflect"
 	"strings"
 	"time"
 
@@ -92,4 +95,50 @@ func ConvertStringToDate(dateString string) (pgtype.Date, error) {
 	dateFormat.Valid = true
 
 	return dateFormat, nil
+}
+
+// ConvertToNumeric converts a generic numeric value to pgtype.Numeric
+func ConvertToNumeric(value interface{}) (pgtype.Numeric, error) {
+	var numeric pgtype.Numeric
+
+	// Handle supported numeric types
+	switch v := value.(type) {
+	case int, int8, int16, int32, int64:
+		numeric.Int = big.NewInt(reflect.ValueOf(v).Int())
+		numeric.Valid = true
+	case float32, float64:
+		f := big.NewFloat(reflect.ValueOf(v).Float())
+		intPart := new(big.Int)
+
+		// extract integer part and exponent
+		f.Int(intPart)
+		exp := f.MantExp(nil)
+		numeric.Int = intPart
+		numeric.Exp = int32(exp)
+		numeric.Valid = true
+	default:
+		return numeric, errors.New("unsupported type for pgtype.Numeric conversion")
+	}
+
+	return numeric, nil
+}
+
+// ConvertToInt2 converts a generic numeric value to pgtype.Int2
+func ConvertToInt2(value interface{}) (pgtype.Int2, error) {
+	var int2 pgtype.Int2
+
+	// Handle int types specifically for Int2
+	switch v := value.(type) {
+	case int8, int16, int32, int:
+		intValue := reflect.ValueOf(v).Int()
+		if intValue < -32768 || intValue > 32767 {
+			return int2, errors.New("value out of range for pgtype.Int2")
+		}
+		int2.Int16 = int16(intValue)
+		int2.Valid = true
+	default:
+		return int2, errors.New("unsupported type for pgtype.Int2 conversion")
+	}
+
+	return int2, nil
 }

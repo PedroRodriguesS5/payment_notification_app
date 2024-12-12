@@ -15,7 +15,7 @@ CREATE TABLE users (
 CREATE TABLE recurring_payment (
     recurring_payment_id SERIAL PRIMARY KEY,
     payer_id UUID NOT NULL,
-    receiver_id UUID NOT NULL,
+    receiver_id UUID,
     payer_name VARCHAR(60) NOT NULL,  
     receiver_name VARCHAR(60) NOT NULL,  
     amount DECIMAL(10, 2) NOT NULL,

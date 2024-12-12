@@ -16,7 +16,7 @@ INSERT INTO recurring_payment (payer_id, receiver_id, payer_name, receiver_name,
 SELECT 
     $1, 
     $2, 
-    u1.name || ' ' || u1.second_name AS payer_name,   -- Correção da concatenação
+    u1.name || ' ' || u1.second_name AS payer_name,   
     u2.name || ' ' || u2.second_name AS receiver_name, 
     $3, 
     $4, 
@@ -31,11 +31,11 @@ RETURNING recurring_payment_id
 type CreateRecurringPaymentParams struct {
 	PayerID          pgtype.UUID
 	ReceiverID       pgtype.UUID
-	Amount           float64
+	Amount           pgtype.Numeric
 	NotificationType pgtype.Text
 	StartDate        pgtype.Date
 	EndDate          pgtype.Date
-	DayOfMonth       int32
+	DayOfMonth       pgtype.Int2
 }
 
 func (q *Queries) CreateRecurringPayment(ctx context.Context, arg CreateRecurringPaymentParams) (int32, error) {
@@ -54,18 +54,28 @@ func (q *Queries) CreateRecurringPayment(ctx context.Context, arg CreateRecurrin
 }
 
 const createSelfRecurringPayment = `-- name: CreateSelfRecurringPayment :one
-INSERT INTO recurring_payment(payer_id,receiver_name, amount, start_date, end_date, day_of_month)
-VALUES($1,$2, $3, $4, $5, $6)
+INSERT INTO recurring_payment(payer_id,receiver_name,payer_name, amount, notification_type,  start_date, end_date, day_of_month)
+SELECT
+    $1,
+    $2,
+    u.name || ' ' || u.second_name AS payer_name, 
+    $3, 
+    $4, 
+    $5, 
+    $6,
+    $7
+FROM users u WHERE u.user_id = $1
 RETURNING recurring_payment_id
 `
 
 type CreateSelfRecurringPaymentParams struct {
-	PayerID      pgtype.UUID
-	ReceiverName string
-	Amount       float64
-	StartDate    pgtype.Date
-	EndDate      pgtype.Date
-	DayOfMonth   pgtype.Int2
+	PayerID          pgtype.UUID
+	ReceiverName     string
+	Amount           pgtype.Numeric
+	NotificationType pgtype.Text
+	StartDate        pgtype.Date
+	EndDate          pgtype.Date
+	DayOfMonth       pgtype.Int2
 }
 
 func (q *Queries) CreateSelfRecurringPayment(ctx context.Context, arg CreateSelfRecurringPaymentParams) (int32, error) {
@@ -73,6 +83,7 @@ func (q *Queries) CreateSelfRecurringPayment(ctx context.Context, arg CreateSelf
 		arg.PayerID,
 		arg.ReceiverName,
 		arg.Amount,
+		arg.NotificationType,
 		arg.StartDate,
 		arg.EndDate,
 		arg.DayOfMonth,
@@ -147,91 +158,6 @@ func (q *Queries) GetAllUsers(ctx context.Context) ([]User, error) {
 	return items, nil
 }
 
-const getNotificationInfo = `-- name: GetNotificationInfo :one
-SELECT
-    n.notification_id,
-    n.recurring_payment_id,
-    rp.payer_name,
-    rp.receiver_name,
-    rp.amount,
-    rp.notification_type,
-    n.notification_date,
-    n.status
-FROM notification n
-JOIN recurring_payment rp ON n.recurring_payment_id = rp.recurring_payment_id
-JOIN users u ON u.user_id = n.user_id
-`
-
-type GetNotificationInfoRow struct {
-	NotificationID     int32
-	RecurringPaymentID pgtype.Int4
-	PayerName          pgtype.Text
-	ReceiverName       pgtype.Text
-	Amount             interface{}
-	NotificationType   pgtype.Text
-	NotificationDate   pgtype.Timestamp
-	Status             pgtype.Text
-}
-
-func (q *Queries) GetNotificationInfo(ctx context.Context) (GetNotificationInfoRow, error) {
-	row := q.db.QueryRow(ctx, getNotificationInfo)
-	var i GetNotificationInfoRow
-	err := row.Scan(
-		&i.NotificationID,
-		&i.RecurringPaymentID,
-		&i.PayerName,
-		&i.ReceiverName,
-		&i.Amount,
-		&i.NotificationType,
-		&i.NotificationDate,
-		&i.Status,
-	)
-	return i, err
-}
-
-const getNotificationsByStatus = `-- name: GetNotificationsByStatus :many
-SELECT 
-    notification_id, 
-    rp.amount, 
-    rp.notification_type, 
-    notification_date 
-FROM notification
-JOIN recurring_payment rp ON notification.recurring_payment_id = rp.recurring_payment_id
-WHERE status = $1
-`
-
-type GetNotificationsByStatusRow struct {
-	NotificationID   int32
-	Amount           pgtype.Numeric
-	NotificationType pgtype.Text
-	NotificationDate pgtype.Timestamp
-}
-
-func (q *Queries) GetNotificationsByStatus(ctx context.Context, dollar_1 pgtype.Text) ([]GetNotificationsByStatusRow, error) {
-	rows, err := q.db.Query(ctx, getNotificationsByStatus, dollar_1)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []GetNotificationsByStatusRow
-	for rows.Next() {
-		var i GetNotificationsByStatusRow
-		if err := rows.Scan(
-			&i.NotificationID,
-			&i.Amount,
-			&i.NotificationType,
-			&i.NotificationDate,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const getRecurringPaymentInfo = `-- name: GetRecurringPaymentInfo :one
 SELECT 
     rp.recurring_payment_id,
@@ -245,9 +171,7 @@ SELECT
     u.email AS receiver_email
 FROM recurring_payment rp
 JOIN users u ON u.user_id = rp.receiver_id
-WHERE rp.payment_status = 'active' 
-AND CURRENT_DATE BETWEEN rp.start_date AND rp.end_date
-AND EXTRACT(DAY FROM CURRENT_DATE) = rp.day_of_month
+WHERE u.user_id = $1
 `
 
 type GetRecurringPaymentInfoRow struct {
@@ -262,8 +186,8 @@ type GetRecurringPaymentInfoRow struct {
 	ReceiverEmail      string
 }
 
-func (q *Queries) GetRecurringPaymentInfo(ctx context.Context) (GetRecurringPaymentInfoRow, error) {
-	row := q.db.QueryRow(ctx, getRecurringPaymentInfo)
+func (q *Queries) GetRecurringPaymentInfo(ctx context.Context, userID pgtype.UUID) (GetRecurringPaymentInfoRow, error) {
+	row := q.db.QueryRow(ctx, getRecurringPaymentInfo, userID)
 	var i GetRecurringPaymentInfoRow
 	err := row.Scan(
 		&i.RecurringPaymentID,

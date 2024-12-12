@@ -12,8 +12,8 @@ import (
 	"github.com/pedroRodriguesS5/payment_notification/internal/handler/api"
 	paymenthandlers "github.com/pedroRodriguesS5/payment_notification/internal/http/paymentHandlers"
 	"github.com/pedroRodriguesS5/payment_notification/internal/http/userHandlers"
-	"github.com/pedroRodriguesS5/payment_notification/internal/payment"
-	"github.com/pedroRodriguesS5/payment_notification/internal/user"
+	"github.com/pedroRodriguesS5/payment_notification/internal/service/payment"
+	"github.com/pedroRodriguesS5/payment_notification/internal/service/user"
 	sqlc_db "github.com/pedroRodriguesS5/payment_notification/project"
 )
 

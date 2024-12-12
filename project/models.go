@@ -25,7 +25,7 @@ type RecurringPayment struct {
 	NotificationType   pgtype.Text
 	StartDate          pgtype.Date
 	EndDate            pgtype.Date
-	DayOfMonth         int32
+	DayOfMonth         pgtype.Int2
 	PaymentStatus      pgtype.Text
 }
 
