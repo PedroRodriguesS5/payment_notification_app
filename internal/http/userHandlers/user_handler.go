@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
-	"github.com/pedroRodriguesS5/payment_notification/internal/user"
+	"github.com/pedroRodriguesS5/payment_notification/internal/service/user"
 	"github.com/pedroRodriguesS5/payment_notification/pkg/infra"
 	tools "github.com/pedroRodriguesS5/payment_notification/pkg/utils"
 )

@@ -5,7 +5,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/pedroRodriguesS5/payment_notification/internal/middleware"
-	"github.com/pedroRodriguesS5/payment_notification/internal/user"
+	"github.com/pedroRodriguesS5/payment_notification/internal/service/user"
 )
 
 func RegisterUserAuthRoutes(e *echo.Echo, uService user.Service) {
@@ -20,7 +20,7 @@ func GetUser(s user.Service) echo.HandlerFunc {
 		userId := c.Param("id")
 		findedUser, err := s.GetUser(c.Request().Context(), userId)
 		if err != nil {
-			return c.String(http.StatusInternalServerError, err.Error())
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "User not found"})
 		}
 		if findedUser == nil {
 			return c.JSON(http.StatusNotFound, err)
