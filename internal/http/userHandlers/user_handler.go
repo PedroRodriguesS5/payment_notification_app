@@ -13,14 +13,19 @@ import (
 // Handler who the echo will create the routes
 func RegisterUserPublicRoutes(e *echo.Echo, uService user.Service) {
 	publicGroup := e.Group("/public")
-	// usersHandlers
-
-	publicGroup.GET("/user/all", GetAllUsers(uService))
 	publicGroup.POST("/user/create", CreateUser(uService))
 	publicGroup.POST("/user/login", LoginHandler(uService))
 }
 
-// Handler to create user
+// @Summary Create User
+// @Description Create a user in the database
+// @Accept json
+// @Produce json
+// @Param data body user.UserRegisterDTO true "Post request body"
+// @Success 201 {object} map[string]string "Usuário criado com sucesso"
+// @Failure 400 {object} map[string]string "error" : "Invalid Request"
+// @Failure 500 {object} map[string]string "error" : "Internal Server Error"
+// @Router /public/user/create [post]
 func CreateUser(s user.Service) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var req user.UserRegisterDTO
@@ -40,20 +45,14 @@ func CreateUser(s user.Service) echo.HandlerFunc {
 	}
 }
 
-// Handler to get all the user from the dataBase
-func GetAllUsers(s user.Service) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		allUsers, err := s.GetAllUsers(c.Request().Context())
-
-		if err != nil {
-			return c.String(http.StatusInternalServerError, err.Error())
-		}
-
-		return c.JSON(http.StatusOK, allUsers)
-	}
-}
-
-// Handler to login and generate token
+// @Summary User login
+// @Description login and generate token for the user
+// @Accept json
+// @Param data body user.LoginUserDTO true "Login request body"
+// @Success 200 {string} string "Return token"
+// @Failure 400 {object} map[string]string "error" : "Invalid Credentails"
+// @Failure 500 {object} map[string]string "error" : "Token generation error
+// @Router /public/user/login [post]
 func LoginHandler(s user.Service) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var req user.LoginUserDTO
@@ -66,7 +65,7 @@ func LoginHandler(s user.Service) echo.HandlerFunc {
 
 		// verificando se o usuário é encontrado
 		if err != nil {
-			return c.JSON(http.StatusBadRequest, map[string]string{"erro": "user not found"})
+			return c.JSON(http.StatusBadRequest, map[string]string{"erro": "Invalid Credentials"})
 		}
 
 		// compare password hash
@@ -82,7 +81,7 @@ func LoginHandler(s user.Service) echo.HandlerFunc {
 		tokenString, err := infra.GenerateToken(convertUUID)
 
 		if err != nil {
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Could not create token"})
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Token generate error"})
 		}
 
 		return c.JSON(http.StatusOK, tokenString)

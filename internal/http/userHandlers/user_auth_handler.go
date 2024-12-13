@@ -28,3 +28,15 @@ func GetUser(s user.Service) echo.HandlerFunc {
 		return c.JSON(http.StatusOK, findedUser)
 	}
 }
+
+// func GetAllUsers(s user.Service) echo.HandlerFunc {
+// 	return func(c echo.Context) error {
+// 		allUsers, err := s.GetAllUsers(c.Request().Context())
+
+// 		if err != nil {
+// 			return c.String(http.StatusInternalServerError, err.Error())
+// 		}
+
+// 		return c.JSON(http.StatusOK, allUsers)
+// 	}
+// }

@@ -1,9 +1,6 @@
 -- name: GetUser :one
 SELECT * FROM users WHERE user_id = $1;
 
--- name: GetAllUsers :many
-SELECT * FROM users;
-
 -- name: ListPayers :many
 SELECT DISTINCT u.user_id, u.email, u.name, u.second_name
 FROM users u

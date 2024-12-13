@@ -17,6 +17,15 @@ func RegisterPaymentAuthRoutes(e *echo.Echo, pService payment.Service) {
 	authGroup.GET("/payment", GetPayment(pService))
 }
 
+// @Summary Create payment
+// @Description Create a recurring payment
+// @Accept json
+// @Produce json
+// @Param data body payment.RecurringPaymentRequestDTO true "Post request body"
+// @Success 201 {object} map[string]string "Pagamento criado com sucesso"
+// @Failure 400 {object} map[string]string "error" : "Invalid request"
+// @Failure 500 {object} map[string]string "error" : "Internal Server Error"
+// @Router /public/user/create [post]
 func CreatePayment(s payment.Service) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		token, ok := c.Get("token").(string)
@@ -37,6 +46,15 @@ func CreatePayment(s payment.Service) echo.HandlerFunc {
 	}
 }
 
+// @Summary Create self payment
+// @Description Create a recurring self payment
+// @Accept json
+// @Produce json
+// @Param data body payment.RecurringPaymentRequestDTO true "Post request body"
+// @Success 201 {object} map[string]string "Pagamento criado com sucesso"
+// @Failure 400 {object} map[string]string "error" : "Invalid request"
+// @Failure 500 {object} map[string]string "error" : "Internal Server Error"
+// @Router /public/user/create [post]
 func CreateSelfPayment(s payment.Service) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		token, ok := c.Get("token").(string)
@@ -57,6 +75,16 @@ func CreateSelfPayment(s payment.Service) echo.HandlerFunc {
 	}
 }
 
+// @Summary Get payment user
+// @Description Get a payment that user id is equal to payer id
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @Produce json
+// @Success 200 {array} payment.RecurringPaymentResponseDTO
+// @Failure 400 {object} map[string]string "error" : "Payment not found"
+// @Failure 500 {object} map[string]string "error" 	: "Internal server error"
+// @Router /public/user/create [get]
 func GetPayment(s payment.Service) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		token, ok := c.Get("token").(string)

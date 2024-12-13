@@ -80,25 +80,6 @@ func (s *Service) GetUser(ctx context.Context, userID string) (*db.User, error) 
 	}, nil
 }
 
-func (s *Service) GetAllUsers(ctx context.Context) ([]UserResponseDTO, error) {
-
-	u, err := s.r.GetAllUsers(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("error to get data from data base: %v", err)
-	}
-	var users []UserResponseDTO
-
-	for _, j := range u {
-		convertID, _ := tools.ConvertUUIDToString(j.UserID)
-		users = append(users, UserResponseDTO{
-			UserID: convertID,
-			Name:   j.Name,
-			Email:  j.Email,
-		})
-	}
-	return users, nil
-}
-
 func (s *Service) GetUserByEmail(ctx context.Context, userEmail string) (*db.User, error) {
 	user, err := s.r.GetUserByEmail(ctx, userEmail)
 
