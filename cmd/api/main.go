@@ -15,9 +15,17 @@ import (
 	"github.com/pedroRodriguesS5/payment_notification/internal/service/payment"
 	"github.com/pedroRodriguesS5/payment_notification/internal/service/user"
 	sqlc_db "github.com/pedroRodriguesS5/payment_notification/project"
+	echoSwagger "github.com/swaggo/echo-swagger"
+
+	_ "github.com/pedroRodriguesS5/payment_notification/docs"
 )
 
-// conection to database and start the api
+// @title Payment Notification App
+// @version 1.0
+// @description notification from pending payments
+// @contact.email pedroxbrs@gmail.com
+// @host localhost:8000
+// @basePath /public/user/login
 func main() {
 	err := godotenv.Load()
 
@@ -59,10 +67,10 @@ func main() {
 
 	// h = echo.Handlres(*uService)
 
+	e.GET("/swagger/*", echoSwagger.WrapHandler)
 	paymenthandlers.RegisterPaymentAuthRoutes(e, *pService)
 	userHandlers.RegisterUserPublicRoutes(e, *uService)
 	userHandlers.RegisterUserAuthRoutes(e, *uService)
-
 	err = api.Start("8000", e)
 
 	if err != nil {

@@ -1,0 +1,163 @@
+basePath: /public/user/login
+definitions:
+  payment.RecurringPaymentRequestDTO:
+    properties:
+      amount:
+        type: number
+      day_of_month:
+        type: integer
+      end_date:
+        type: string
+      notification_type:
+        type: string
+      receiverID:
+        type: string
+      start_date:
+        type: string
+    type: object
+  payment.RecurringPaymentResponseDTO:
+    properties:
+      amount:
+        type: number
+      dayOfMonth:
+        type: integer
+      endDate:
+        type: string
+      notificationType:
+        type: string
+      payerID:
+        type: string
+      payerName:
+        type: string
+      paymentStatus:
+        type: string
+      receiverID:
+        type: string
+      receiverName:
+        type: string
+      recurringPaymentID:
+        type: integer
+      startDate:
+        type: string
+    type: object
+  user.LoginUserDTO:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  user.UserRegisterDTO:
+    properties:
+      born_date:
+        type: string
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+      phone_number:
+        type: string
+      second_name:
+        type: string
+      user_document:
+        type: string
+    type: object
+host: localhost:8000
+info:
+  contact:
+    email: pedroxbrs@gmail.com
+  description: notification from pending payments
+  title: Payment Notification App
+  version: "1.0"
+paths:
+  /public/user/create:
+    get:
+      description: Get a payment that user id is equal to payer id
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/payment.RecurringPaymentResponseDTO'
+            type: array
+        "400":
+          description: 'error" : "Payment not found'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: 'error" : "Internal server error'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get payment user
+    post:
+      consumes:
+      - application/json
+      description: Create a user in the database
+      parameters:
+      - description: Post request body
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/user.UserRegisterDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Usuário criado com sucesso
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: 'error" : "Invalid Request'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: 'error" : "Internal Server Error'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create User
+  /public/user/login:
+    post:
+      consumes:
+      - application/json
+      description: login and generate token for the user
+      parameters:
+      - description: Login request body
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/user.LoginUserDTO'
+      responses:
+        "200":
+          description: Return token
+          schema:
+            type: string
+        "400":
+          description: 'error" : "Invalid Credentails'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: 'error" : "Token generation error'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: User login
+swagger: "2.0"
