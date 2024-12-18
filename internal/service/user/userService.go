@@ -44,7 +44,7 @@ func (s *Service) CreateUser(ctx context.Context, userDTO UserRegisterDTO) (stri
 	user, err := s.r.CreateUser(ctx, params)
 
 	if err != nil {
-		return "", fmt.Errorf("error to create user: %w", err)
+		return "", fmt.Errorf("erro ao criar usuário: %w", err)
 	}
 
 	return fmt.Sprintln("Usuário criado com sucesso: ", user), nil

@@ -3,7 +3,9 @@ package userHandlers
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"github.com/pedroRodriguesS5/payment_notification/internal/service/user"
 	"github.com/pedroRodriguesS5/payment_notification/pkg/infra"
@@ -29,17 +31,29 @@ func RegisterUserPublicRoutes(e *echo.Echo, uService user.Service) {
 func CreateUser(s user.Service) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var req user.UserRegisterDTO
+
 		if err := c.Bind(&req); err != nil {
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request"})
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Requisição inválida"})
 		}
 
-		// if err := c.Validate(&req); err != nil {
-		// 	return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
-		// }
+		validate := validator.New()
+		validate.RegisterValidation("password_strength", tools.Passwordvalidation)
+
+		if err := req.Validate(validate); err != nil {
+			formatedErrors := strings.Split(err.Error(), "\n")
+			return c.JSON(http.StatusBadRequest, map[string]interface{}{"errors": formatedErrors})
+		}
+
+		userEmail, err := s.GetUserByEmail(c.Request().Context(), req.Email)
+
+		if userEmail != nil {
+			return c.JSON(http.StatusBadRequest, map[string]string{"Error": "e-mail já cadastrado!"})
+		}
+
 		create, err := s.CreateUser(c.Request().Context(), req)
 
 		if err != nil {
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 		}
 		return c.JSON(http.StatusCreated, create)
 	}

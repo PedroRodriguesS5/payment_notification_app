@@ -3,6 +3,7 @@ package paymenthandlers
 import (
 	"net/http"
 
+	"github.com/asaskevich/govalidator"
 	"github.com/labstack/echo/v4"
 	"github.com/pedroRodriguesS5/payment_notification/internal/middleware"
 	"github.com/pedroRodriguesS5/payment_notification/internal/service/payment"
@@ -33,13 +34,20 @@ func CreatePayment(s payment.Service) echo.HandlerFunc {
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "missing or expired token"})
 		}
 		var req payment.RecurringPaymentRequestDTO
+
+		validationOk, err := govalidator.ValidateStruct(req)
+		if !validationOk {
+			return c.JSON(http.StatusBadRequest, map[string]error{"Invvalid Credetials": err})
+		}
+
 		if err := c.Bind(&req); err != nil {
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid request"})
 		}
 
 		create, err := s.CreateRecurringPayments(c.Request().Context(), req, token)
+
 		if err != nil {
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Error to create payment"})
+			return c.JSON(http.StatusInternalServerError, map[string]error{"error": err})
 		}
 
 		return c.JSON(http.StatusCreated, create)
