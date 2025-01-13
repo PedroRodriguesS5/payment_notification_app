@@ -3,7 +3,9 @@ package payment
 import (
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
+	tools "github.com/pedroRodriguesS5/payment_notification/pkg/utils"
 )
 
 type RecurringPaymentRequestDTO struct {
@@ -36,4 +38,8 @@ type RecurringPaymentResponseDTO struct {
 	EndDate            *time.Time
 	DayOfMonth         int16
 	PaymentStatus      string
+}
+
+func (p *RecurringPaymentRequestDTO) Validate(validate *validator.Validate) error {
+	return tools.ValidateFunc[RecurringPaymentRequestDTO](*p, validate)
 }

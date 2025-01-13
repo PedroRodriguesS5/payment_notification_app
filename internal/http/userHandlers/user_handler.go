@@ -37,8 +37,8 @@ func CreateUser(s user.Service) echo.HandlerFunc {
 		}
 
 		validate := validator.New()
+		validate.RegisterValidation("validate_document", tools.ValidateDoc)
 		validate.RegisterValidation("password_strength", tools.Passwordvalidation)
-
 		if err := req.Validate(validate); err != nil {
 			formatedErrors := strings.Split(err.Error(), "\n")
 			return c.JSON(http.StatusBadRequest, map[string]interface{}{"errors": formatedErrors})
