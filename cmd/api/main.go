@@ -60,7 +60,7 @@ func main() {
 
 	// Services
 	queries := sqlc_db.New(pool)
-	pService := payment.NewServvice(queries)
+	pService := payment.NewService(queries)
 	uService := user.NewService(queries)
 	// Echo instance
 	e := echo.New()

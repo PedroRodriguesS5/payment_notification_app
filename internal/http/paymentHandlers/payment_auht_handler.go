@@ -4,9 +4,11 @@ import (
 	"net/http"
 
 	"github.com/asaskevich/govalidator"
+	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"github.com/pedroRodriguesS5/payment_notification/internal/middleware"
 	"github.com/pedroRodriguesS5/payment_notification/internal/service/payment"
+	tools "github.com/pedroRodriguesS5/payment_notification/pkg/utils"
 )
 
 func RegisterPaymentAuthRoutes(e *echo.Echo, pService payment.Service) {
@@ -35,6 +37,8 @@ func CreatePayment(s payment.Service) echo.HandlerFunc {
 		}
 		var req payment.RecurringPaymentRequestDTO
 
+		validate := validator.New()
+		validate.RegisterValidation("verify_date", tools.ValidateEndDateGreaterThanStartDate)
 		validationOk, err := govalidator.ValidateStruct(req)
 		if !validationOk {
 			return c.JSON(http.StatusBadRequest, map[string]error{"Invvalid Credetials": err})

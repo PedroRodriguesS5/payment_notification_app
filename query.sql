@@ -61,6 +61,11 @@ SELECT user_id,name, second_name email, password
 FROM users
 WHERE email = $1;
 
+-- name: GetReceiverIdByEmail :one
+SELECT user_id
+FROM users
+WHERE email = $1;
+
 -- name: UpdateCharge :exec
 UPDATE recurring_payment
 SET payment_status = $2,
@@ -83,6 +88,7 @@ SELECT
 FROM recurring_payment rp
 JOIN users u ON u.user_id = rp.receiver_id
 WHERE u.user_id = $1;
+
 
 
 -- -- name: GetNotificationInfo :one

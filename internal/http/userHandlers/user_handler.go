@@ -44,7 +44,7 @@ func CreateUser(s user.Service) echo.HandlerFunc {
 			return c.JSON(http.StatusBadRequest, map[string]interface{}{"errors": formatedErrors})
 		}
 
-		userEmail, err := s.GetUserByEmail(c.Request().Context(), req.Email)
+		userEmail, _ := s.GetUserByEmail(c.Request().Context(), req.Email)
 
 		if userEmail != nil {
 			return c.JSON(http.StatusBadRequest, map[string]string{"Error": "e-mail já cadastrado!"})

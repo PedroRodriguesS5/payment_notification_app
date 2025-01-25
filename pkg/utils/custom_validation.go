@@ -1,9 +1,11 @@
 package tools
 
 import (
+	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -107,4 +109,28 @@ func ValidateCNPJ(cnpj string) bool {
 
 	// Verifica se os dígitos verificadores estão corretos
 	return strconv.Itoa(dv1)+strconv.Itoa(dv2) == cnpj[12:]
+}
+
+func ValidateEndDateGreaterThanStartDate(fl validator.FieldLevel) bool {
+	// Get the parent struct being validated
+	req := fl.Parent().Interface()
+
+	// Use reflection to get the StartDate and EndDate fields
+	startDateField := reflect.ValueOf(req).FieldByName("start_date")
+	endDateField := reflect.ValueOf(req).FieldByName("end_date")
+
+	// Ensure the fields are valid and of type time.Time
+	if !startDateField.IsValid() || !endDateField.IsValid() {
+		return false
+	}
+
+	startDate, ok1 := startDateField.Interface().(time.Time)
+	endDate, ok2 := endDateField.Interface().(time.Time)
+
+	if !ok1 || !ok2 {
+		return false
+	}
+
+	// Compare the dates
+	return endDate.After(startDate)
 }

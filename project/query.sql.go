@@ -124,38 +124,17 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (pgtype.
 	return user_id, err
 }
 
-const getAllUsers = `-- name: GetAllUsers :many
-SELECT user_id, name, second_name, email, password, user_document, phone_number, born_date, created_at FROM users
+const getReceiverIdByEmail = `-- name: GetReceiverIdByEmail :one
+SELECT user_id
+FROM users
+WHERE email = $1
 `
 
-func (q *Queries) GetAllUsers(ctx context.Context) ([]User, error) {
-	rows, err := q.db.Query(ctx, getAllUsers)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []User
-	for rows.Next() {
-		var i User
-		if err := rows.Scan(
-			&i.UserID,
-			&i.Name,
-			&i.SecondName,
-			&i.Email,
-			&i.Password,
-			&i.UserDocument,
-			&i.PhoneNumber,
-			&i.BornDate,
-			&i.CreatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
+func (q *Queries) GetReceiverIdByEmail(ctx context.Context, email string) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, getReceiverIdByEmail, email)
+	var user_id pgtype.UUID
+	err := row.Scan(&user_id)
+	return user_id, err
 }
 
 const getRecurringPaymentInfo = `-- name: GetRecurringPaymentInfo :one

@@ -13,7 +13,7 @@ type Service struct {
 	r *db.Queries
 }
 
-func NewServvice(r *db.Queries) *Service {
+func NewService(r *db.Queries) *Service {
 	return &Service{
 		r: r,
 	}
@@ -46,11 +46,6 @@ func (s *Service) CreateRecurringPayments(ctx context.Context, recurringDTO Recu
 		return "", fmt.Errorf("error to convert stirng into uuid: %v", err)
 	}
 
-	receiverIdConvert, err := tools.ConvertStringToUUID(recurringDTO.ReceiverID)
-	if err != nil {
-		return "", fmt.Errorf("error to convert data string to pgtype UUDI: %v", err)
-	}
-
 	notificationTypeConvert := tools.ConvertStringToPgtypeText(recurringDTO.NotificationType)
 
 	convertedAmount, err := tools.ConvertToNumeric(recurringDTO.Amount)
@@ -63,9 +58,19 @@ func (s *Service) CreateRecurringPayments(ctx context.Context, recurringDTO Recu
 		return "", fmt.Errorf("error to conevrt go integer in int2, %v", err)
 	}
 
+	if err != nil {
+		return "", fmt.Errorf("error to find user id: %v", err.Error())
+	}
+
+	getReceiverID, err := s.r.GetReceiverIdByEmail(ctx, recurringDTO.ReceiverEmail)
+
+	if err != nil {
+		return "", fmt.Errorf("error to get receiver id: %v", err.Error())
+	}
+
 	params := db.CreateRecurringPaymentParams{
 		PayerID:          userIdConvert,
-		ReceiverID:       receiverIdConvert,
+		ReceiverID:       getReceiverID,
 		Amount:           convertedAmount,
 		NotificationType: notificationTypeConvert,
 		StartDate:        startDate,

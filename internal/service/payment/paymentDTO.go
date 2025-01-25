@@ -9,21 +9,21 @@ import (
 )
 
 type RecurringPaymentRequestDTO struct {
-	ReceiverID       string  `json:"receiverID" valid:"IsUUID, required"`
-	Amount           float64 `json:"amount" valid:"IsFLoat, required"`
-	NotificationType string  `json:"notification_type" valid:"IsString, required"`
-	StartDate        string  `json:"start_date" valid:"datetime(2006-01-02),required"`
-	EndDate          string  `json:"end_date" valid:"datetime(2006-01-02),required"`
-	DayOfMont        int32   `json:"day_of_month" valid:"IsInt, range(1|31), required"`
+	ReceiverEmail    string  `json:"receiver_email" validate:"required,email"`
+	Amount           float64 `json:"amount" validate:"required,numeric"`
+	NotificationType string  `json:"notification_type" validate:"required, alpha"`
+	StartDate        string  `json:"start_date" validate:"required,datetime"`
+	EndDate          string  `json:"end_date" validate:"required,datetime, verify_date"`
+	DayOfMont        int32   `json:"day_of_month" validate:"min=1,max=31, required,numeric"`
 }
 
 type SelfPaymentDTO struct {
-	ReceiverName     string  `json:"receiver_name" valid:"IsString, required"`
-	Amount           float64 `json:"amount" valid:"IsFloat, required"`
-	NotificationType string  `json:"notification_type" valid:"IsString,required"`
-	StartDate        string  `json:"start_date" valid:"datetime(2006-01-02),required"`
-	EndDate          string  `json:"end_date" valid:"datetime(2006-01-02),required"`
-	DayOfMont        int32   `json:"day_of_month" valid:"IsInt, required"`
+	ReceiverName     string  `json:"receiver_name" validate:"required, alpha"`
+	Amount           float64 `json:"amount" validate:"required,numeric"`
+	NotificationType string  `json:"notification_type" validate:"required,alpha"`
+	StartDate        string  `json:"start_date" validate:"required,datetime"`
+	EndDate          string  `json:"end_date" validate:"required,datetime"`
+	DayOfMont        int32   `json:"day_of_month" validate:"required,numeric"`
 }
 
 type RecurringPaymentResponseDTO struct {
